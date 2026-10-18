@@ -1,0 +1,108 @@
+"use client"
+// 入庫画面（登録済商品）
+import { checkProduct } from "@/actions/checkProduct";
+import { useActionState } from "react";
+import { restockProduct } from "@/actions/restockProduct";
+
+type CheckResult =
+    Awaited<ReturnType<typeof checkProduct>>;
+
+type FoundResult = Extract<
+    CheckResult,
+    { status: "found" }
+>;
+
+type Product = FoundResult["product"];//FoundResult の中にある product の型を取り出してください
+
+type ExistingProductRestockFormProps = {
+    // 親から受け取るものを書く
+    product: Product;
+};
+
+export default function ExistingProductRestockForm({
+    // 受け取る
+    product,//どの商品？
+}: ExistingProductRestockFormProps) {
+    const [
+        restockState,
+        restockAction,
+        isRestocking,
+    ] = useActionState(
+        restockProduct,
+        null
+    );  
+
+    return (
+        <div className="existing-product-restock">
+            <p style={{ color: "green" }}>
+                登録済みの商品です。
+            </p>
+
+            <p>
+                棚番：
+                {product.shelf}
+            </p>
+
+            <p>
+                商品名：
+                {product.productName}
+            </p>
+
+            <p>
+                商品仕様：
+                {product.inquiry}
+            </p>
+
+            <p>
+                現在庫：
+                {product.quantity}
+            </p>
+
+            {restockState?.error && (
+                <p style={{ color: "red" }}>
+                    {restockState.error}
+                </p>
+            )}
+
+            <form
+                action={restockAction}
+                className="restock-form"
+            >
+                <input
+                    type="hidden"
+                    name="productId"
+                    value={
+                        product.id
+                    }
+                />
+
+                <div className="form-group">
+                    <label htmlFor="restock-quantity">入庫数量</label>
+                    <input
+                        type="number"
+                        name="quantity"
+                        placeholder="入庫数量を入力"
+                        className="form-input"
+                        min={1}
+                        max={Number.MAX_SAFE_INTEGER}
+                        step={1}
+                        required
+                    />
+                    <p>0以上の数字を入力してください</p>
+                </div>
+
+                <button
+                    type="submit"
+                    className="button button-success"
+                    disabled={isRestocking}
+                >
+                    {isRestocking
+                        ? "入庫中..."
+                        : "入庫する"}
+                </button>
+
+            </form>
+
+        </div>
+    )
+}
