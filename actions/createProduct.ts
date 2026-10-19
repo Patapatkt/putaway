@@ -1,6 +1,8 @@
 "use server";
 
-import { db } from "@/lib/db";
+import { and, eq,sql } from "drizzle-orm";
+import { drizzleDb } from "@/lib/db";
+import { products } from "@/lib/schema";
 import { revalidatePath } from "next/cache";
 // 前回の処理結果として保持する型
 type ProductState = {
@@ -62,42 +64,38 @@ export async function createProduct(
             error: "入庫数量は1以上の安全な整数で入力してください。"
         };
     }
-    // 同じ棚番・商品名・仕様がなければ、新しい商品を登録する
-    const result = await db.execute({
-        sql: `
-         -- productsテーブルの指定した5列へ新しい行を追加する
-        INSERT INTO products (
-                productName,
-                quantity,
-                shelf,
-                inquiry,
-                memo
+    // 同じ棚番・商品名・仕様の商品を探すための検索
+    const existingProductQuery = drizzleDb
+        .select({ id: products.id })
+        .from(products)
+        .where(
+            and(
+                eq(products.shelf, shelf),
+                eq(products.productName, productName),
+                eq(products.inquiry, inquiry),
             )
-            -- args(引数)の先頭5つの値を、追加用の1行として用意する
-            SELECT ?, ?, ?, ?, ?
-            -- 内側の検索に一致する行が存在しない場合だけ追加する
-            WHERE NOT EXISTS (
-            -- 商品の詳細ではなく、存在するかを確認する
-                SELECT 1
-                FROM products
-                WHERE shelf = ?
-                  AND productName = ?
-                  AND inquiry = ?
-    )
-        `,
-        args: [
-            productName,//SELECTの引数
-            quantity,//SELECTの引数
-            shelf,//SELECTの引数
-            inquiry,//SELECTの引数
-            memo,//SELECTの引数
-            shelf,//WHERE NOT EXISTSの引数
-            productName,//WHERE NOT EXISTSの引数
-            inquiry//WHERE NOT EXISTSの引数
-        ],
-    });
+        );
+
+    // 同じ商品が存在しない場合だけ登録する
+    const result = await drizzleDb
+        .insert(products)
+        .select(
+            sql`
+                SELECT
+                    NULL,
+                    ${productName},
+                    ${quantity},
+                    ${shelf},
+                    ${inquiry},
+                    ${memo}
+                WHERE NOT EXISTS ${existingProductQuery}
+            `
+        )
+        .returning({
+            id: products.id,
+        })
     //商品確認後に同じ商品が登録された場合など
-    if (result.rowsAffected === 0) {
+    if (result.length === 0) {
         return {
             error: "同じ商品が登録済みです。商品を再確認して追加入庫してください。",
         };

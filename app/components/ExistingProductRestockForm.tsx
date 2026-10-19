@@ -88,7 +88,7 @@ export default function ExistingProductRestockForm({
                         step={1}
                         required
                     />
-                    <p>0以上の数字を入力してください</p>
+                    <p>1以上の数字を入力してください</p>
                 </div>
 
                 <button

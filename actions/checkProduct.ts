@@ -1,7 +1,8 @@
 "use server";//DBを扱う処理をサーバー側で実行する宣言
 
-import { db } from "@/lib/db";
-
+import { and, eq } from "drizzle-orm";
+import { drizzleDb } from "@/lib/db";
+import { products } from "@/lib/schema";
 // 登録する商品が「登録済」か「未登録」かを判断する関数
 export async function checkProduct(
     // 引数設定
@@ -25,26 +26,19 @@ export async function checkProduct(
         }
     }
     // 棚番・商品名・仕様が一致する商品を探す
-    const result = await db.execute({
-        //入力値をSQLの命令と分けて、安全に渡す
-        //SELECT で必要情報を取得,FROM products WHEREでDBのテーブルproductsより「棚番商品名・仕様が一致する商品を探す」
-        sql: `
-            SELECT id, productName, quantity, shelf, inquiry, memo
-            FROM products
-            WHERE shelf = ?
-              AND productName = ?
-              AND inquiry = ?
-            LIMIT 1
-            `,
-         //argsでSQLの？に渡す値を配列に格納 
-        args: [
-            trimmedShelf,// 1番目の ?：棚番
-            trimmedProductName,// 2番目の ?：商品名
-            trimmedInquiry,// 3番目の ?：仕様
-        ]
-    });
+    const result = await drizzleDb
+        .select()
+        .from(products)//productsテーブルで検索
+        .where(
+            and(
+                eq(products.shelf, trimmedShelf),//テーブル内の棚番と入力した棚番が一致
+                eq(products.productName, trimmedProductName),//テーブル内の商品名と入力した商品名が一致
+                eq(products.inquiry, trimmedInquiry),//テーブル内の仕様と入力した仕様が一致
+            )
+        )
+        .limit(1);
 
-    const product =result.rows[0]//検索結果の先頭行[0]を取得する。0件ならundefined(未定義)
+    const product =result[0]//検索結果の先頭行[0]を取得する。0件ならundefined(未定義)
 
     // 登録済みの商品
     if(product){

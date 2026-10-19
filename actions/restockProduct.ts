@@ -1,8 +1,10 @@
 "use server";
 // 追加入庫(登録済商品)のバックエンド
-import { db } from "@/lib/db";  
+import { and, eq, lte, sql } from "drizzle-orm";
+import { drizzleDb } from "@/lib/db";
+import { products } from "@/lib/schema";
 import { revalidatePath } from "next/cache";
-
+// 前回の処理結果として保持する型
 type ProductState = {
     error: string;
 } | null;
@@ -35,22 +37,23 @@ export async function restockProduct(
         Number.MAX_SAFE_INTEGER - quantity;
 
     // DBに保存されている現在庫へ、入庫数量を加算する
-    const result = await db.execute({
-        sql: `
-            UPDATE products
-            SET quantity = quantity + ?
-            WHERE id = ?
-              AND quantity <= ?
-        `,
-        args: [
-            quantity,
-            productId,
-            maxCurrentQuantity,
-        ],
-    });
-
+    const result = await drizzleDb
+        .update(products)
+        .set({
+            quantity: sql`${products.quantity} + ${quantity}`,
+        })
+            .where(
+                and(
+                    eq(products.id, productId),
+                    lte(products.quantity, maxCurrentQuantity),
+                )
+            )
+            .returning({
+                id: products.id,
+            });
+        
     // 対象商品がない場合、または上限を超える場合
-    if (result.rowsAffected === 0) {
+    if (result.length === 0) {
         return {
             error: "対象の商品が存在しないか、在庫数量の上限を超えています。商品を再確認してください。",
         };

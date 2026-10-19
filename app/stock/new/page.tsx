@@ -152,12 +152,12 @@ export default function NewProductPage() {
                     )}
 
                 <Link
-                    href="/stock-operation"
+                    href="/"
                     className={
                         "button button-secondary"
                     }
                 >
-                    入出庫操作メニュー
+                    在庫一覧
                 </Link>
             </div>
         </main>

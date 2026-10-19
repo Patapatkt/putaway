@@ -43,3 +43,7 @@ next-env.d.ts
 # ローカルのSQLiteデータベース
 *.db
 *.db-*
+
+# パッケージ復旧時のバックアップ
+/node_modules-backup-*/
+/package-lock-backup-*.json
