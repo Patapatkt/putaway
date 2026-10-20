@@ -1,5 +1,6 @@
 @import "tailwindcss";
 
+/* 基本設定 */
 :root {
   --background: #ffffff;
   --foreground: #171717;
@@ -12,25 +13,27 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
 
-/* 入庫画面全体 */
-.page-container {
-  max-width: 720px;
+/* 画面全体 */
+.page-container,
+.inventory-page {
   margin: 32px auto;
   padding: 24px;
   line-height: 1.7;
+}
+
+.page-container {
+  max-width: 720px;
+}
+
+.inventory-page {
+  box-sizing: border-box;
+  max-width: 1100px;
 }
 
 .page-title {
@@ -39,14 +42,19 @@ body {
   font-weight: 700;
 }
 
-/* 入力欄を縦に並べる */
+/* フォーム */
 .product-form,
 .form-action,
 .restock-form {
   display: flex;
   flex-direction: column;
-  border-color: black;
   gap: 20px;
+}
+
+.form-action,
+.restock-form {
+  width: 100%;
+  margin-top: 16px;
 }
 
 .form-group {
@@ -64,7 +72,6 @@ body {
   font-size: 13px;
 }
 
-/* 入力欄の幅を統一 */
 .form-input {
   box-sizing: border-box;
   width: 100%;
@@ -89,7 +96,7 @@ textarea.form-input {
   border-color: #2563eb;
 }
 
-/* 確認結果と操作部分 */
+/* 確認結果・操作部分 */
 .product-actions {
   display: flex;
   flex-direction: column;
@@ -108,12 +115,6 @@ textarea.form-input {
 
 .existing-product-restock > p {
   margin-bottom: 8px;
-}
-
-.form-action,
-.restock-form {
-  width: 100%;
-  margin-top: 16px;
 }
 
 /* ボタン */
@@ -188,8 +189,75 @@ textarea.form-input {
   color: #64748b;
 }
 
+/* 在庫一覧：表全体 */
+.inventory-page .table-wrapper {
+  overflow-x: auto;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  background: #ffffff;
+}
+
+.inventory-page .common-table {
+  width: 100%;
+  min-width: 680px;
+  table-layout: fixed;
+  border-collapse: collapse;
+  color: #1e293b;
+  font-size: 15px;
+}
+
+/* 在庫一覧：セル */
+.inventory-page .common-table th,
+.inventory-page .common-table td {
+  padding: 14px 18px;
+  border: 1px solid #cbd5e1;
+  text-align: left;
+  vertical-align: middle;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+/* 見出し */
+.inventory-page .common-table th {
+  background: #166534;
+  color: #ffffff;
+  font-weight: 700;
+}
+
+/* 行の背景 */
+.inventory-page .common-table tbody tr:nth-child(even) {
+  background: #f1f5f9;
+}
+
+.inventory-page .common-table tbody tr:hover {
+  background: #ecfdf5;
+}
+
+/* 棚番 */
+.inventory-page .common-table td:first-child {
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 現在庫 */
+.inventory-page .common-table th:nth-child(4),
+.inventory-page .common-table td:nth-child(4) {
+  text-align: right;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.inventory-page .common-table td:nth-child(4) {
+  font-weight: 700;
+}
+
 /* ダークモード */
 @media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+
   .form-group p,
   .input-method-divider {
     color: #cbd5e1;
@@ -198,11 +266,34 @@ textarea.form-input {
   .error-message {
     color: #fca5a5;
   }
+
+  .inventory-page .table-wrapper {
+    border-color: #475569;
+    background: #0f172a;
+  }
+
+  .inventory-page .common-table {
+    color: #e2e8f0;
+  }
+
+  .inventory-page .common-table th,
+  .inventory-page .common-table td {
+    border-color: #475569;
+  }
+
+  .inventory-page .common-table tbody tr:nth-child(even) {
+    background: #1e293b;
+  }
+
+  .inventory-page .common-table tbody tr:hover {
+    background: #14532d;
+  }
 }
 
 /* スマートフォン */
 @media (max-width: 600px) {
-  .page-container {
+  .page-container,
+  .inventory-page {
     margin: 16px auto;
     padding: 16px;
   }
@@ -218,5 +309,14 @@ textarea.form-input {
   .button {
     box-sizing: border-box;
     width: 100%;
+  }
+
+  .inventory-page .common-table th,
+  .inventory-page .common-table td {
+    padding: 12px;
+  }
+
+  .inventory-page .product-actions {
+    align-items: stretch;
   }
 }
