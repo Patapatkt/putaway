@@ -1,9 +1,21 @@
 "use server";
 
-import { and, eq,sql } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { drizzleDb } from "@/lib/db";
 import { products } from "@/lib/schema";
 import { revalidatePath } from "next/cache";
+import { productSchema, createQuantitySchema } from "@/app/model/product";
+
+// 商品確認に必要な3項目の検証ルールを取り出す
+const createProductSchema = productSchema.pick({
+    shelf: true,
+    productName: true,
+    inquiry: true,
+}).extend({
+    // メモは未送信なら空文字にし、前後の空白を除去する
+    memo: productSchema.shape.memo.trim().default(""),
+});
+
 // 前回の処理結果として保持する型
 type ProductState = {
     error: string;
@@ -14,80 +26,78 @@ export async function createProduct(
     previousState: ProductState,
     formData: FormData
 ): Promise<ProductState> {
-    // フォームから文字列を取得する
-    const rawShelf = formData.get("shelf");//棚番を取得
-    const rawProductName = formData.get("productName");//商品名取得
-    const rawInquiry = formData.get("inquiry");//仕様取得
-    const rawMemo = formData.get("memo");//メモ取得
-    const rawQuantity = formData.get("quantity");//数量取得
-    // 必須項目が文字列で取得されているか確認する(棚番・商品名・仕様)
-    if (
-        typeof rawShelf !== "string" ||
-        typeof rawProductName !== "string" ||
-        typeof rawInquiry !== "string"
-    ) {
+    //safeParse()で検証の成否を返す
+    const result = createProductSchema.safeParse({
+        shelf: formData.get("shelf"),
+        productName: formData.get("productName"),
+        inquiry: formData.get("inquiry"),
+        memo: formData.get("memo") ?? undefined,
+    });
+
+    if (!result.success) {
         return {
-            error: "棚番・商品名・仕様を正しく入力してください。",
+            error: result.error.issues[0]?.message ??
+                "棚番・商品名・仕様を正しく入力してください。",
         };
     }
-    // メモは省略可能だが、送られてきた場合は文字列か確認する
-    if (rawMemo !== null && typeof rawMemo !== "string") {
-        return {
-            error: "メモを正しく入力してください。",
-        };
-    }
-    // 前後の空白を取り除く
-    const shelf = rawShelf.trim();
-    const productName = rawProductName.trim();
-    const inquiry = rawInquiry.trim();
-    const memo = rawMemo === null ? "" : rawMemo.trim();
-    // 空白だけの入力も含め、必須項目を確認する
-    if (!shelf || !productName || !inquiry) {
-        return {
-            error: "棚番・商品名・仕様を入力してください。"
-        };
-    }
+
+    //検証済み・空白除去済みの値を取り出す
+    const {
+        shelf: trimmedShelf,
+        productName: trimmedProductName,
+        inquiry: trimmedInquiry,
+        memo: trimmedMemo,
+    } = result.data;
     // 新規登録時の入庫数量を確認する
+    const rawQuantity = formData.get("quantity");
+
     if (
         typeof rawQuantity !== "string" ||
-        rawQuantity.trim() ===""
+        rawQuantity.trim() === ""
     ) {
         return {
-            error: "入庫数量は整数を正しく入力してください"
+            error: "入庫数量は整数を正しく入力してください。",
         };
     }
 
-    const quantity = Number(rawQuantity);
+    const resultQuantity = createQuantitySchema.safeParse({
+        quantity: Number(rawQuantity),
+    });
 
-    if (!Number.isSafeInteger(quantity) || quantity <= 0) {
+    if (!resultQuantity.success) {
         return {
-            error: "入庫数量は1以上の安全な整数で入力してください。"
+            error: resultQuantity.error.issues[0]?.message ??
+                "入庫数量は1以上の安全な整数で入力してください。",
         };
     }
+
+    // 検証済みの数量を取り出す
+    const quantity = resultQuantity.data.quantity;
+
     // 同じ棚番・商品名・仕様の商品を探すための検索
     const existingProductQuery = drizzleDb
         .select({ id: products.id })
         .from(products)
         .where(
             and(
-                eq(products.shelf, shelf),
-                eq(products.productName, productName),
-                eq(products.inquiry, inquiry),
+                eq(products.shelf, trimmedShelf),
+                eq(products.productName, trimmedProductName),
+                eq(products.inquiry, trimmedInquiry),
             )
         );
 
     // 同じ商品が存在しない場合だけ登録する
-    const result = await drizzleDb
+    const unmatchedProducts = await drizzleDb
         .insert(products)
         .select(
             sql`
                 SELECT
                     NULL,
-                    ${productName},
+                    ${trimmedProductName},
                     ${quantity},
-                    ${shelf},
-                    ${inquiry},
-                    ${memo}
+                    ${trimmedShelf},
+                    ${trimmedInquiry},
+                    ${trimmedMemo}
                 WHERE NOT EXISTS ${existingProductQuery}
             `
         )
@@ -95,7 +105,7 @@ export async function createProduct(
             id: products.id,
         })
     //商品確認後に同じ商品が登録された場合など
-    if (result.length === 0) {
+    if (unmatchedProducts.length === 0) {
         return {
             error: "同じ商品が登録済みです。商品を再確認して追加入庫してください。",
         };

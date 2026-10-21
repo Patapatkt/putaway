@@ -55,6 +55,12 @@ export default function NewProductPage() {
                 inquiry
             );
 
+            // バックエンドが返した検証エラーを画面へ表示する
+            if ("error" in result) {
+                setCheckError(result.error ?? "商品の確認に失敗しました。");
+                return;
+            }
+
             setCheckResult(result);
         } catch (error) {
             console.error(
@@ -78,7 +84,6 @@ export default function NewProductPage() {
             <h1 className="page-title">
                 商品入庫
             </h1>
-
             <div className="qr-input-area">
                 <h2 className="qr-method-title">
                     QRコードを読み取る
@@ -126,13 +131,6 @@ export default function NewProductPage() {
                         {checkError}
                     </p>
                 )}
-
-                {checkResult &&
-                    (checkResult.status === "error" &&
-                        <p className="error-message">
-                            {checkResult.error}
-                        </p>
-                    )}
 
                 {checkResult?.status === "found" && (
                     <ExistingProductRestockForm
