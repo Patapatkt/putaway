@@ -4,6 +4,8 @@ import { and, eq, lte, sql } from "drizzle-orm";
 import { drizzleDb } from "@/lib/db";
 import { products } from "@/lib/schema";
 import { revalidatePath } from "next/cache";
+
+
 // 前回の処理結果として保持する型
 type ProductState = {
     error: string;
@@ -17,6 +19,7 @@ export async function restockProduct(
 
     const productId = Number(formData.get("productId"));
     const quantity = Number(formData.get("quantity"));
+    const productName =String(formData.get("productName"));
 
     // 商品IDのガード節
     if (!Number.isInteger(productId) || productId <= 0) {
