@@ -7,6 +7,10 @@ import Link from "next/link";
 import { useActionState, useState } from "react";
 import NewProductRegistrationForm from "@/app/components/NewProductRegistrationForm";
 import ExistingProductRestockForm from "@/app/components/ExistingProductRestockForm";
+import { useForm } from "@conform-to/react";
+import { parseWithZod } from "@conform-to/zod/v4";
+import { checkProductSchema } from "@/app/model/product";
+
 // import ProductQrScanner from "@/components/ProductQrScanner"; //QRコード実装しコメントアウトを解除する
 // import NewProductRegistrationForm
 //     from "@/components/NewProductRegistrationForm";
@@ -27,6 +31,26 @@ export default function NewProductPage() {
         useState<CheckResult | null>(null);
     const [isChecking, setIsChecking] = useState(false);
     const [checkError, setCheckError] = useState("");
+    const [checkForm, checkFields] = useForm({
+        id: "product-check-form",
+
+        // 入力欄からフォーカスが外れたら検証
+        shouldValidate: "onBlur",
+
+        // 一度検証した項目は、入力するたびに再検証
+        shouldRevalidate: "onInput",
+
+        onValidate({ formData }) {
+            return parseWithZod(formData, {
+                schema: checkProductSchema,
+            });
+        },
+        // 検証に成功した場合に商品確認を実行する
+        onSubmit(event) {
+            event.preventDefault();
+            void handleProductCheck();
+        },
+    });
 
     // 入力内容を変更したら、以前の確認結果を消す
     function resetCheckResult() {
@@ -78,7 +102,6 @@ export default function NewProductPage() {
         }
 
     }
-
     return (
         <main className="page-container">
             <h1 className="page-title">
@@ -102,29 +125,36 @@ export default function NewProductPage() {
                 <span>または手入力</span>
             </div>
 
-            <ProductCheckForm
-                shelf={shelf}
-                setShelf={setShelf}
-                productName={productName}
-                setProductName={setProductName}
-                inquiry={inquiry}
-                setInquiry={setInquiry}
-                resetCheckResult={resetCheckResult}
-            />
+            <form
+                id={checkForm.id}
+                onSubmit={checkForm.onSubmit}
+                noValidate
+            >
+                <ProductCheckForm
+                    shelf={shelf}
+                    setShelf={setShelf}
+                    productName={productName}
+                    setProductName={setProductName}
+                    inquiry={inquiry}
+                    setInquiry={setInquiry}
+                    resetCheckResult={resetCheckResult}
+                    errors={{
+                        shelf: checkFields.shelf.errors,
+                        productName: checkFields.productName.errors,
+                        inquiry: checkFields.inquiry.errors,
+                    }}
+                />
 
-            <div className="product-actions">
                 <button
-                    type="button"
-                    onClick={handleProductCheck}
-                    className={
-                        "button button-success"
-                    }
+                    type="submit"
+                    className="button button-success"
                     disabled={isChecking}
                 >
-                    {isChecking
-                        ? "確認中..."
-                        : "商品を確認"}
+                    {isChecking ? "確認中..." : "商品を確認"}
                 </button>
+            </form>
+
+            <div className="product-actions">
 
                 {checkError && (
                     <p className="error-message">
