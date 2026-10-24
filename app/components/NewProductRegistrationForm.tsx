@@ -1,3 +1,5 @@
+import React from "react";
+import type { FormEvent, FormEventHandler } from "react";
 // 新規商品、入庫時のコンポーネント
 type ProductInputValues = {
     shelf: string;
@@ -10,13 +12,26 @@ type NewProductRegistrationFormProps = {
     error?: string;
     formAction: (formData: FormData) => void;
     isPending: boolean;
+
+    formId: string;
+    onSubmit: FormEventHandler<HTMLFormElement>;
+
+    errors: {
+        shelf?: string[];
+        productName?: string[];
+        inquiry?: string[];
+        quantity?: string[];
+    }
 };
 
 export default function NewProductRegistrationForm({
     inputValues,
     error,
+    errors,
     formAction,
     isPending,
+    formId,
+    onSubmit,
 }: NewProductRegistrationFormProps) {
     return (
         <>
@@ -33,7 +48,7 @@ export default function NewProductRegistrationForm({
                 商品仕様：
                 {inputValues.inquiry}
             </p>
-
+            {/* 登録処理全体のエラー */}
             {error && (
                 <p className="error-message">
                     {error}
@@ -41,26 +56,44 @@ export default function NewProductRegistrationForm({
             )}
 
             <form
+                id={formId}
+                onSubmit={onSubmit}
                 action={formAction}
                 className="form-action"
+                noValidate
             >
                 <input
                     type="hidden"
                     name="shelf"
                     value={inputValues.shelf}
                 />
+                {errors.shelf && (
+                    <p className="error-message">
+                        {errors.shelf.join("/")}
+                    </p>
+                )}
 
                 <input
                     type="hidden"
                     name="productName"
                     value={inputValues.productName}
                 />
+                {errors.productName && (
+                    <p className="error-message">
+                        {errors.productName.join("/")}
+                    </p>
+                )}
 
                 <input
                     type="hidden"
                     name="inquiry"
                     value={inputValues.inquiry}
                 />
+                {errors.inquiry && (
+                    <p className="error-message">
+                        {errors.inquiry?.join("/")}
+                    </p>
+                )}
 
                 <div className="form-group">
                     <label>
@@ -74,6 +107,12 @@ export default function NewProductRegistrationForm({
                         step={1}
                         required
                     />
+                    {errors.quantity && (
+                        <p className="error-message">
+                            {errors.quantity.join("/")}
+                        </p>
+                    )}
+                    <p>入庫数量は１以上を入力してください</p>
                 </div>
 
                 <label htmlFor="new-product-memo">

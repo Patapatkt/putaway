@@ -9,7 +9,7 @@ import NewProductRegistrationForm from "@/app/components/NewProductRegistrationF
 import ExistingProductRestockForm from "@/app/components/ExistingProductRestockForm";
 import { useForm } from "@conform-to/react";
 import { parseWithZod } from "@conform-to/zod/v4";
-import { checkProductSchema } from "@/app/model/product";
+import { checkProductSchema, createProductSchema } from "@/app/model/product";
 
 // import ProductQrScanner from "@/components/ProductQrScanner"; //QRコード実装しコメントアウトを解除する
 // import NewProductRegistrationForm
@@ -33,25 +33,40 @@ export default function NewProductPage() {
     const [checkError, setCheckError] = useState("");
     const [checkForm, checkFields] = useForm({
         id: "product-check-form",
-
         // 入力欄からフォーカスが外れたら検証
         shouldValidate: "onBlur",
-
         // 一度検証した項目は、入力するたびに再検証
         shouldRevalidate: "onInput",
-
         onValidate({ formData }) {
             return parseWithZod(formData, {
                 schema: checkProductSchema,
             });
         },
-        // 検証に成功した場合に商品確認を実行する
         onSubmit(event) {
-            event.preventDefault();
-            void handleProductCheck();
+        // ブラウザ標準の送信を止める
+        event.preventDefault();
+
+        console.log("商品確認を実行", {
+            shelf,
+            productName,
+            inquiry,
+        });
+
+        void handleProductCheck();
+    },
+    });
+    const [newProductForm, newProductFields] = useForm({
+        id: "new-product-registration-form",
+        // 入力欄からフォーカスが外れたら検証
+        shouldValidate: "onBlur",
+        // 一度検証した項目は、入力するたびに再検証
+        shouldRevalidate: "onInput",
+        onValidate({ formData }) {
+            return parseWithZod(formData, {
+                schema: createProductSchema,
+            });
         },
     });
-
     // 入力内容を変更したら、以前の確認結果を消す
     function resetCheckResult() {
         setCheckResult(null);
@@ -103,7 +118,7 @@ export default function NewProductPage() {
 
     }
     return (
-        <main className="page-container">
+        <main className="page-container" >
             <h1 className="page-title">
                 商品入庫
             </h1>
@@ -152,6 +167,7 @@ export default function NewProductPage() {
                 >
                     {isChecking ? "確認中..." : "商品を確認"}
                 </button>
+
             </form>
 
             <div className="product-actions">
@@ -165,7 +181,7 @@ export default function NewProductPage() {
                 {checkResult?.status === "found" && (
                     <ExistingProductRestockForm
                         key={checkResult.product.id}
-                        product={checkResult.product}
+                        product ={checkResult.product}
                     />
                 )}
 
@@ -174,6 +190,15 @@ export default function NewProductPage() {
                         <NewProductRegistrationForm
                             inputValues={checkResult.inputValues}
                             error={state?.error}
+                            errors={{
+                                shelf: newProductFields.shelf.errors,
+                                productName: newProductFields.productName.errors,
+                                inquiry: newProductFields.inquiry.errors,
+                                quantity: newProductFields.quantity.errors,
+                            }
+                            }
+                            formId={newProductForm.id}
+                            onSubmit={newProductForm.onSubmit}
                             formAction={formAction}
                             isPending={isPending}
                         />
@@ -188,6 +213,6 @@ export default function NewProductPage() {
                     在庫一覧
                 </Link>
             </div>
-        </main>
+        </main >
     );
 }

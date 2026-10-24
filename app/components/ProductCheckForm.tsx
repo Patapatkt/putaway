@@ -43,8 +43,7 @@ export default function ProductCheckForm({
                     }}
                     placeholder="例: A12345"
                     className="form-input"
-                    minLength={6}//ここは消して良い？
-                    maxLength={6}//ここは消して良い？
+                    maxLength={6}
                     required
                 />
                 {errors.shelf && (

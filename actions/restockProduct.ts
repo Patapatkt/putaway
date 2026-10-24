@@ -4,10 +4,10 @@ import { and, eq, lte, sql } from "drizzle-orm";
 import { drizzleDb } from "@/lib/db";
 import { products } from "@/lib/schema";
 import { revalidatePath } from "next/cache";
-import { productSchema, restockQuantitySchema, } from "@/app/model/product";
+import { productSchema, restockProductSchema, } from "@/app/model/product";
 
 // 入庫対象の商品IDを検証する
-const restockProductSchema = productSchema.pick({
+const productIdSchema = productSchema.pick({
     id: true,
 })
 
@@ -23,10 +23,11 @@ export async function restockProduct(
     formData: FormData
 ): Promise<ProductState> {
     //フォームのproductIdを数値に変換してsafeParse()で検証の成否を返す
-    const result = restockProductSchema.safeParse({
+    const result = productIdSchema.safeParse({
         id: Number(formData.get("productId")),
     });
-
+    const rawProductId = formData.get("productId");
+    const rawQuantity = formData.get("quantity");
     // 検証に失敗したら、最初のエラーメッセージを返す
     if (!result.success) {
         return {
@@ -34,14 +35,31 @@ export async function restockProduct(
                 "入力内容を確認してください",
         };
     }
-    // 検証済み・空白除去済みの値を取り出す
-    const { id: productId } = result.data;
+    if (
+        typeof rawProductId !== "string" ||
+        rawProductId.trim() === ""
+    ) {
+        return {
+            error: "商品情報が正しくありません。",
+        };
+    }
+
+    if (
+        typeof rawQuantity !== "string" ||
+        rawQuantity.trim() === ""
+    ) {
+        return {
+            error: "入庫数量を入力してください。",
+        };
+    }
     // 入庫数量を数値に変換してZodで検証する
-    const quantityValidation = restockQuantitySchema.safeParse(
-        Number(formData.get("quantity"))
-    );
+    const quantityValidation = restockProductSchema.safeParse({
+        productId: Number(rawProductId),
+        quantity: Number(rawQuantity),
+    });
 
     if (!quantityValidation.success) {
+        console.log("追加入庫の検証エラー", quantityValidation.error.issues);
         return {
             error:
                 quantityValidation.error.issues[0]?.message ??
@@ -49,13 +67,13 @@ export async function restockProduct(
         };
     }
 
-    const quantity = quantityValidation.data;
+    const { productId, quantity } = quantityValidation.data;
 
     // 加算後に上限を超えないよう、現在庫の上限を求める
     const maxCurrentQuantity = Number.MAX_SAFE_INTEGER - quantity;
-
     // DBに保存されている現在庫へ、入庫数量を加算する
     const quantityResult = await drizzleDb
+
         .update(products)
         .set({
             quantity: sql`${products.quantity} + ${quantity}`,

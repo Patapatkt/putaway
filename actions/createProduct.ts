@@ -4,17 +4,9 @@ import { and, eq, sql } from "drizzle-orm";
 import { drizzleDb } from "@/lib/db";
 import { products } from "@/lib/schema";
 import { revalidatePath } from "next/cache";
-import { productSchema, createQuantitySchema } from "@/app/model/product";
-
-// 商品確認に必要な3項目の検証ルールを取り出す
-const createProductSchema = productSchema.pick({
-    shelf: true,
-    productName: true,
-    inquiry: true,
-}).extend({
-    // メモは未送信なら空文字にし、前後の空白を除去する
-    memo: productSchema.shape.memo.trim().default(""),
-});
+import {
+    productSchema, createQuantitySchema, createProductSchema,
+} from "@/app/model/product";
 
 // 前回の処理結果として保持する型
 type ProductState = {
@@ -27,7 +19,9 @@ export async function createProduct(
     formData: FormData
 ): Promise<ProductState> {
     //safeParse()で検証の成否を返す
-    const result = createProductSchema.safeParse({
+    const result = createProductSchema
+    .omit({quantity:true})
+    .safeParse({
         shelf: formData.get("shelf"),
         productName: formData.get("productName"),
         inquiry: formData.get("inquiry"),

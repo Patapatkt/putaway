@@ -167,10 +167,11 @@ textarea.form-input {
 }
 
 /* エラー */
-.error-message {
-  color: #b91c1c;
-  font-weight: 600;
-  overflow-wrap: anywhere;
+.error-message,
+.form-group .error-message {
+    color: #b91c1c;
+    font-weight: 600;
+    overflow-wrap: anywhere;
 }
 
 /* QR関連の案内 */

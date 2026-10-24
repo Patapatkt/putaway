@@ -1,8 +1,12 @@
-"use client"
+"use client";
+
 // 入庫画面（登録済商品）
-import { checkProduct } from "@/actions/checkProduct";
-import { useActionState } from "react";
+import type { checkProduct } from "@/actions/checkProduct";
+import { FormEventHandler, useActionState } from "react";
 import { restockProduct } from "@/actions/restockProduct";
+import { useForm } from "@conform-to/react";
+import { parseWithZod } from "@conform-to/zod/v4";
+import { restockProductSchema } from "@/app/model/product";
 
 type CheckResult =
     Awaited<ReturnType<typeof checkProduct>>;
@@ -12,25 +16,33 @@ type FoundResult = Extract<
     { status: "found" }
 >;
 
-type Product = FoundResult["product"];//FoundResult の中にある product の型を取り出してください
+type Product = FoundResult["product"];
 
 type ExistingProductRestockFormProps = {
-    // 親から受け取るものを書く
     product: Product;
 };
 
 export default function ExistingProductRestockForm({
-    // 受け取る
-    product,//どの商品？
+    product,
 }: ExistingProductRestockFormProps) {
     const [
         restockState,
         restockAction,
         isRestocking,
-    ] = useActionState(
-        restockProduct,
-        null
-    );  
+    ] = useActionState(restockProduct, null);
+
+    const [restockForm, restockFields] = useForm({
+        id: `restock-form-${product.id}`,
+
+        shouldValidate: "onBlur",
+        shouldRevalidate: "onInput",
+
+        onValidate({ formData }) {
+            return parseWithZod(formData, {
+                schema: restockProductSchema,
+            });
+        },
+    });
 
     return (
         <div className="existing-product-restock">
@@ -38,47 +50,43 @@ export default function ExistingProductRestockForm({
                 登録済みの商品です。
             </p>
 
-            <p>
-                棚番：
-                {product.shelf}
-            </p>
-
-            <p>
-                商品名：
-                {product.productName}
-            </p>
-
-            <p>
-                商品仕様：
-                {product.inquiry}
-            </p>
-
-            <p>
-                現在庫：
-                {product.quantity}
-            </p>
+            <p>棚番：{product.shelf}</p>
+            <p>商品名：{product.productName}</p>
+            <p>商品仕様：{product.inquiry}</p>
+            <p>現在庫：{product.quantity}</p>
 
             {restockState?.error && (
-                <p style={{ color: "red" }}>
+                <p className="error-message">
                     {restockState.error}
                 </p>
             )}
 
             <form
+                id={restockForm.id}
+                onSubmit={restockForm.onSubmit}
                 action={restockAction}
                 className="restock-form"
+                noValidate
             >
                 <input
                     type="hidden"
                     name="productId"
-                    value={
-                        product.id
-                    }
+                    value={product.id}
                 />
 
+                {restockFields.productId.errors && (
+                    <p className="error-message">
+                        {restockFields.productId.errors.join(" / ")}
+                    </p>
+                )}
+
                 <div className="form-group">
-                    <label htmlFor="restock-quantity">入庫数量</label>
+                    <label htmlFor="restock-quantity">
+                        入庫数量
+                    </label>
+
                     <input
+                        id="restock-quantity"
                         type="number"
                         name="quantity"
                         placeholder="入庫数量を入力"
@@ -88,7 +96,14 @@ export default function ExistingProductRestockForm({
                         step={1}
                         required
                     />
-                    <p>1以上の数字を入力してください</p>
+
+                    {restockFields.quantity.errors && (
+                        <p className="error-message">
+                            {restockFields.quantity.errors.join(" / ")}
+                        </p>
+                    )}
+
+                    <p>1以上の整数を入力してください</p>
                 </div>
 
                 <button
@@ -96,13 +111,9 @@ export default function ExistingProductRestockForm({
                     className="button button-success"
                     disabled={isRestocking}
                 >
-                    {isRestocking
-                        ? "入庫中..."
-                        : "入庫する"}
+                    {isRestocking ? "入庫中..." : "入庫する"}
                 </button>
-
             </form>
-
         </div>
-    )
+    );
 }
