@@ -47,3 +47,6 @@ next-env.d.ts
 # パッケージ復旧時のバックアップ
 /node_modules-backup-*/
 /package-lock-backup-*.json
+
+# ローカルDBのバックアップ
+*.db.backup

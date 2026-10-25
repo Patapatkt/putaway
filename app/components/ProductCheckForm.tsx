@@ -43,7 +43,7 @@ export default function ProductCheckForm({
                     }}
                     placeholder="例: A12345"
                     className="form-input"
-                    maxLength={6}
+                    maxLength={6}//棚番の入力制限は6文字以内
                     required
                 />
                 {errors.shelf && (

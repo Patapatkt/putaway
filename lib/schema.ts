@@ -15,9 +15,42 @@ export const products = sqliteTable(
 
         inquiry: text("inquiry").notNull(),
 
+        // ここに入庫日時を追加
+
+        // ここに出庫日時を追加
+
         memo: text("memo").notNull().default(""),
     },
     (table) => [
         check("products_quantity_nonnegative", sql`${table.quantity} >= 0`),
+    ]
+)
+
+// historyテーブル(入出庫履歴画面)の構造を定義
+export const history = sqliteTable(
+    "history",
+    {
+        id: integer("id").primaryKey(),//履歴を識別するID
+        // 同じ商品に複数の履歴を登録できるようにする
+        productId: integer("productId")//対象商品を識別するID
+            .notNull()
+            .references(() => products.id),//履歴と対象商品を関連付ける
+        createdAt: text("createdAt").notNull(),//入出庫時間
+        //操作時点の商品情報を保存する 
+        productName: text("productName").notNull(),//商品名
+        shelf: text("shelf").notNull(),//棚番
+        inquiry: text("inquiry").notNull(),//仕様
+         // 入庫・出庫とも、今回動かした数量を正の数で保存
+        quantity: integer("quantity").notNull(),//入出庫時の数量
+        type: text("type",{enum:["IN","OUT"]}).notNull(),//区分:入庫・出庫
+        memo: text("memo").notNull().default(""),//メモ
+    },
+    (table) => [
+        check("history_quantity_nonnegative", sql`${table.quantity} > 0`
+        ),
+        check(
+            "history_type_volid",
+            sql`${table.type} IN ('IN', 'OUT')`
+        ),
     ]
 )
