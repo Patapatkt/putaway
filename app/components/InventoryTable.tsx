@@ -9,7 +9,6 @@ import {
 } from "@tanstack/react-table";
 import type { ColumnDef, SortingState } from "@tanstack/react-table";
 import type { Product } from "@/app/model/product";
-import { get } from "http";
 // 表の表示に必要な商品情報の型
 type InventoryTableProps = {
     productList: Product[]//親から商品データの配列を受け取る
@@ -35,8 +34,48 @@ const columns: ColumnDef<Product>[] = [
         header: "現在庫",
     },
     {
-        accessorKey: "memo",
-        header: "メモ",
+        accessorKey: "lastReceivedAt",
+        header: "最終入庫時間",
+        cell: ({ getValue }) => {
+            const value = getValue<string | null>();
+
+            if (!value) {
+                return "—";
+            }
+
+            return new Date(value).toLocaleString("ja-JP", {
+                timeZone: "Asia/Tokyo",
+                year: "numeric",
+                month: "2-digit",
+                day: "2-digit",
+                hour: "2-digit",
+                minute: "2-digit",
+                second: "2-digit",
+                hour12: false,
+            });
+        },
+    },
+    {
+        accessorKey: "lastShippedAt",
+        header: "最終出庫日時",
+        cell: ({ getValue }) => {
+            const value = getValue<string | null>();
+
+            if (!value) {
+                return "—";
+            }
+
+            return new Date(value).toLocaleString("ja-JP", {
+                timeZone: "Asia/Tokyo",
+                year: "numeric",
+                month: "2-digit",
+                day: "2-digit",
+                hour: "2-digit",
+                minute: "2-digit",
+                second: "2-digit",
+                hour12: false,
+            });
+        },
     },
 ];
 // 商品一覧の検索結果を表示する
@@ -55,16 +94,59 @@ export default function InventoryTable({
         getSortedRowModel: getSortedRowModel(),
         getRowId: (product) => String(product.id),
 
+        // 初期表示では日時２列を非表示にする
+        initialState: {
+            columnVisibility: {
+                lastReceivedAt: false,
+                lastShippedAt: false,
+            },
+        },
+
         state: {
             sorting,
         },
         onSortingChange: setSorting,
+        // 列の表示状態が変わっても、並び順を初期化しない
+        autoResetAll: false,
+
         // 昇順と降順の2通りで切り替える
         enableSortingRemoval: false,
         enableMultiSort: false,
     });
 
     return (
+    <div className="table-wrapper">
+        <div className="column-controls">
+            <label>
+                <input
+                    type="checkbox"
+                    checked={
+                        table.getColumn("lastReceivedAt")?.getIsVisible()
+                        ?? false
+                    }
+                    onChange={
+                        table.getColumn("lastReceivedAt")
+                            ?.getToggleVisibilityHandler()
+                    }
+                />
+                最終入庫日時を表示
+            </label>
+
+            <label>
+                <input
+                    type="checkbox"
+                    checked={
+                        table.getColumn("lastShippedAt")?.getIsVisible()
+                        ?? false
+                    }
+                    onChange={
+                        table.getColumn("lastShippedAt")
+                            ?.getToggleVisibilityHandler()
+                    }
+                />
+                最終出庫日時を表示
+            </label>
+        </div>
         <div className="table-wrapper">
             <table className="common-table">
                 <thead>
@@ -73,26 +155,26 @@ export default function InventoryTable({
                             {headerGroup.headers.map((header) => (
                                 <th key={header.id} colSpan={header.colSpan}>
                                     {header.isPlaceholder ? null : header.column.id === "shelf" ? (
-                                            <button
-                                                type="button"
-                                                onClick={header.column.getToggleSortingHandler()}
-                                            >
-                                                {flexRender(
-                                                    header.column.columnDef.header,
-                                                    header.getContext()
-                                                )}
-                                                {header.column.getIsSorted() === "asc"
-                                                    ? " ↑"
-                                                    : header.column.getIsSorted() === "desc"
-                                                        ? " ↓"
-                                                        : ""}
-                                            </button>
-                                        ) : (
-                                            flexRender(
+                                        <button
+                                            type="button"
+                                            onClick={header.column.getToggleSortingHandler()}
+                                        >
+                                            {flexRender(
                                                 header.column.columnDef.header,
                                                 header.getContext()
-                                            )
-                                        )}
+                                            )}
+                                            {header.column.getIsSorted() === "asc"
+                                                ? " ↑"
+                                                : header.column.getIsSorted() === "desc"
+                                                    ? " ↓"
+                                                    : ""}
+                                        </button>
+                                    ) : (
+                                        flexRender(
+                                            header.column.columnDef.header,
+                                            header.getContext()
+                                        )
+                                    )}
                                 </th>
                             ))}
                         </tr>
@@ -103,7 +185,7 @@ export default function InventoryTable({
                     {productList.length === 0 ? (
                         <tr>
                             <td
-                                colSpan={5}
+                                colSpan={7}
                                 className="text-left p-4"
                             >
                                 検索条件に一致する商品はありません
@@ -126,5 +208,6 @@ export default function InventoryTable({
                 </tbody>
             </table>
         </div>
+            </div>
     );
 }

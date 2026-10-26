@@ -411,3 +411,140 @@ textarea.form-input {
     justify-self: stretch;
   }
 }
+
+/* 入出庫履歴：画面全体 */
+.history-page {
+  box-sizing: border-box;
+  max-width: 1200px;
+  margin: 32px auto;
+  padding: 24px;
+  line-height: 1.7;
+}
+
+/* 表を囲む枠：狭い画面では横スクロール */
+.history-page .table-wrapper {
+  overflow-x: auto;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  background: #ffffff;
+}
+
+/* 履歴テーブル */
+.history-page .history-table {
+  width: 100%;
+  min-width: 960px;
+  border-collapse: collapse;
+  color: #1e293b;
+  font-size: 14px;
+}
+
+/* 見出しとデータの余白・罫線 */
+.history-page .history-table th,
+.history-page .history-table td {
+  padding: 14px 16px;
+  border: 1px solid #cbd5e1;
+  text-align: left;
+  vertical-align: middle;
+}
+
+/* 見出し */
+.history-page .history-table th {
+  background: #166534;
+  color: #ffffff;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+/* 行を見分けやすくする */
+.history-page .history-table tbody tr:nth-child(even) {
+  background: #f1f5f9;
+}
+
+.history-page .history-table tbody tr:hover {
+  background: #ecfdf5;
+}
+
+/* 日時・棚番：途中で改行しない */
+.history-page .history-table td:nth-child(1),
+.history-page .history-table td:nth-child(2) {
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 区分：中央寄せ */
+.history-page .history-table th:nth-child(5),
+.history-page .history-table td:nth-child(5) {
+  text-align: center;
+  white-space: nowrap;
+}
+
+/* 数量：右寄せ */
+.history-page .history-table th:nth-child(6),
+.history-page .history-table td:nth-child(6) {
+  text-align: right;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.history-page .history-table td:nth-child(6) {
+  font-weight: 700;
+}
+
+/* 商品名・仕様・メモ：長い文字も折り返す */
+.history-page .history-table td:nth-child(3),
+.history-page .history-table td:nth-child(4),
+.history-page .history-table td:nth-child(7) {
+  min-width: 120px;
+  overflow-wrap: anywhere;
+}
+
+/* 履歴がない場合 */
+.history-page .history-table td[colspan] {
+  padding: 24px;
+  text-align: center;
+}
+
+/* 戻るボタン */
+.history-page > .product-actions {
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+/* ダークモード */
+@media (prefers-color-scheme: dark) {
+  .history-page .table-wrapper {
+    border-color: #475569;
+    background: #0f172a;
+  }
+
+  .history-page .history-table {
+    color: #e2e8f0;
+  }
+
+  .history-page .history-table th,
+  .history-page .history-table td {
+    border-color: #475569;
+  }
+
+  .history-page .history-table tbody tr:nth-child(even) {
+    background: #1e293b;
+  }
+
+  .history-page .history-table tbody tr:hover {
+    background: #14532d;
+  }
+}
+
+/* スマートフォン */
+@media (max-width: 600px) {
+  .history-page {
+    margin: 16px auto;
+    padding: 16px;
+  }
+
+  .history-page .history-table th,
+  .history-page .history-table td {
+    padding: 12px;
+  }
+}

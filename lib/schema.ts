@@ -15,9 +15,9 @@ export const products = sqliteTable(
 
         inquiry: text("inquiry").notNull(),
 
-        // ここに入庫日時を追加
+        lastReceivedAt:text("lastReceivedAt"),
 
-        // ここに出庫日時を追加
+        lastShippedAt:text("lastShippedAt"),
 
         memo: text("memo").notNull().default(""),
     },

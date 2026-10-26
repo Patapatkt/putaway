@@ -33,6 +33,14 @@ export default async function Home({ searchParams }: HomeProps) {
         >
           商品入庫
         </Link>
+        <Link
+          href="/history"
+          className={
+            "button button-primary"
+          }
+        >
+          入出庫履歴
+        </Link>
       </div>
     </main >
 

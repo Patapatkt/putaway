@@ -70,6 +70,8 @@ export async function createProduct(
 
     try {
         const created = await drizzleDb.transaction(async (tx) => {
+            // 商品と初回入庫履歴に、同じ日時を記録する
+            const now =new Date().toISOString();
             // 同じ棚番・商品名・仕様の商品を探す
             const existingProductQuery = tx
                 .select({ id: products.id })
@@ -93,6 +95,8 @@ export async function createProduct(
                             ${quantity},
                             ${trimmedShelf},
                             ${trimmedInquiry},
+                            ${now},
+                            NULL,
                             ${trimmedMemo}
                         WHERE NOT EXISTS ${existingProductQuery}
                     `
@@ -113,7 +117,7 @@ export async function createProduct(
             // 新規登録時の初回入庫を履歴へ保存する
             await tx.insert(history).values({
                 productId: product.id,
-                createdAt: new Date().toISOString(),
+                createdAt: now,
                 productName: product.productName,
                 shelf: product.shelf,
                 inquiry: product.inquiry,

@@ -74,11 +74,14 @@ export async function restockProduct(
 
     try {
         const updated = await drizzleDb.transaction(async (tx) => {
+            // 商品と初回入庫履歴に、同じ日時を記録する
+            const now =new Date().toISOString();
             // 在庫を加算し、履歴に必要な商品情報を受け取る
             const [product] = await tx
                 .update(products)
                 .set({
                     quantity: sql`${products.quantity} + ${quantity}`,
+                    lastReceivedAt:now,
                 })
                 .where(
                     and(
@@ -101,7 +104,7 @@ export async function restockProduct(
             // 今回の入庫を1件の履歴として保存する
             await tx.insert(history).values({
                 productId: product.id,
-                createdAt: new Date().toISOString(),
+                createdAt: now,
                 productName: product.productName,
                 shelf: product.shelf,
                 inquiry: product.inquiry,

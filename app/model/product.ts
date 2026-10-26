@@ -17,6 +17,12 @@ export const productSchema = z.object({
             /^[A-Za-z0-9]{6}$/,
             "棚番は6文字の半角英数字で入力してください"
         ),
+    lastReceivedAt:z
+        .string()
+        .nullable(),//文字列かnullを取得
+    lastShippedAt:z
+        .string()
+        .nullable(),//文字列かnullを取得
     //仕様の入力ルールは文字列・前後の空白を取り除く・1文字以上
     inquiry: z
         .string({ error: "仕様を入力してください" })
@@ -76,7 +82,7 @@ export const InventorySearchSchema = z.object({
         .string()
         .trim()
         .regex(
-            /[^A-Za-z0-9]{0,6}$/,
+            /^[A-Za-z0-9]{0,6}$/,
             "棚番は6文字以内の半角英数字で入力してください"
         ),
     //仕様の入力ルールは文字列・前後の空白を取り除く
