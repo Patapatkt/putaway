@@ -1,5 +1,4 @@
 import { getProducts } from "@/lib/getProducts";
-import InventorySearchForm from "./InventorySearchForm";
 import InventoryTable from "./InventoryTable";
 
 // URLから受け取る検索条件の型
