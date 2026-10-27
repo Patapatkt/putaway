@@ -30,13 +30,6 @@ export default async function InventorySearchContent({ searchParams }: HomeParam
 
     return (
         <>
-            <InventorySearchForm
-                action="/"
-                shelf={shelf}
-                productName={productName}
-                inquiry={inquiry}
-            />
-
             {
                 error ? (
                     <p className="form-error">{error}</p>
