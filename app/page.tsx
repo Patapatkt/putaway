@@ -1,7 +1,6 @@
 // 在庫一覧を表示するページ
 
 import Link from "next/link";
-import { Suspense } from "react";
 import InventorySearchContent from "./components/InventorySearchContent";
 import InventorySearchForm from "./components/InventorySearchForm";
 
@@ -15,7 +14,8 @@ type HomeProps = {
 
 // 在庫一覧表示の関数を作成
 export default async function Home({ searchParams }: HomeProps) {
-  const {shelf,productName,inquiry} = await searchParams;
+  // ↓分割代入
+  const { shelf, productName, inquiry } = await searchParams; //await searchParams はURLの検索条件を受け取る処理
   return (
     <main className="inventory-page">
       <h1 className="page-title">在庫一覧</h1>
@@ -25,10 +25,9 @@ export default async function Home({ searchParams }: HomeProps) {
         productName={productName}
         inquiry={inquiry}
       />
-      {/* Suspenseを取り除く為に */}
-      <Suspense fallback={<p>在庫一覧を読み込み中です…</p>}>
-        <InventorySearchContent searchParams={searchParams} />
-      </Suspense>
+
+      <InventorySearchContent searchParams={searchParams} />
+
       <div className="product-actions">
         <Link
           href="/stock/new"

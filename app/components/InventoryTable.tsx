@@ -2,13 +2,16 @@
 // 検索結果の表示コンポーネント
 import { useState } from "react";
 import {
-    flexRender,
     getCoreRowModel,
     getSortedRowModel,
     useReactTable,
 } from "@tanstack/react-table";
 import type { ColumnDef, SortingState } from "@tanstack/react-table";
 import type { Product } from "@/app/model/product";
+import  InventoryCheckbox  from "./InventoryCheckbox";
+import InventoryTableHeader from "./InventoryTableHeader";
+import InventoryTableBody from "./InventoryTableBody";
+import InventoryCards from "./InventoryCards";
 // 表の表示に必要な商品情報の型
 type InventoryTableProps = {
     productList: Product[]//親から商品データの配列を受け取る
@@ -85,7 +88,7 @@ export default function InventoryTable({
     // 初期表示は棚番の昇順
     const [sorting, setSorting] = useState<SortingState>([
         { id: "shelf", desc: false },
-    ])
+    ]);
     // 商品データと列の定義を使って表を準備する
     const table = useReactTable({
         data: productList,
@@ -115,99 +118,36 @@ export default function InventoryTable({
     });
 
     return (
-    <div className="table-wrapper">
-        <div className="column-controls">
-            <label>
-                <input
-                    type="checkbox"
-                    checked={
-                        table.getColumn("lastReceivedAt")?.getIsVisible()
-                        ?? false
-                    }
-                    onChange={
-                        table.getColumn("lastReceivedAt")
-                            ?.getToggleVisibilityHandler()
-                    }
-                />
-                最終入庫日時を表示
-            </label>
+    <div>
+        <InventoryCheckbox table={table} />
 
-            <label>
-                <input
-                    type="checkbox"
-                    checked={
-                        table.getColumn("lastShippedAt")?.getIsVisible()
-                        ?? false
-                    }
-                    onChange={
-                        table.getColumn("lastShippedAt")
-                            ?.getToggleVisibilityHandler()
-                    }
-                />
-                最終出庫日時を表示
-            </label>
-        </div>
-        <div className="table-wrapper">
-            <table className="common-table">
-                <thead>
-                    {table.getHeaderGroups().map((headerGroup) => (
-                        <tr key={headerGroup.id}>
-                            {headerGroup.headers.map((header) => (
-                                <th key={header.id} colSpan={header.colSpan}>
-                                    {header.isPlaceholder ? null : header.column.id === "shelf" ? (
-                                        <button
-                                            type="button"
-                                            onClick={header.column.getToggleSortingHandler()}
-                                        >
-                                            {flexRender(
-                                                header.column.columnDef.header,
-                                                header.getContext()
-                                            )}
-                                            {header.column.getIsSorted() === "asc"
-                                                ? " ↑"
-                                                : header.column.getIsSorted() === "desc"
-                                                    ? " ↓"
-                                                    : ""}
-                                        </button>
-                                    ) : (
-                                        flexRender(
-                                            header.column.columnDef.header,
-                                            header.getContext()
-                                        )
-                                    )}
-                                </th>
-                            ))}
-                        </tr>
-                    ))}
-                </thead>
+        {/* スマホ用：並び替えボタンと縦型カード */}
+        <div className="mt-4 space-y-4 md:hidden">
+            <button
+                type="button"
+                className="rounded-md border border-slate-400 px-4 py-2 font-semibold"
+                onClick={
+                    table.getColumn("shelf")?.getToggleSortingHandler()
+                }
+            >
+                棚番順：
+                {table.getColumn("shelf")?.getIsSorted() === "desc"
+                    ? "降順 ↓"
+                    : "昇順 ↑"}
+            </button>
 
-                <tbody>
-                    {productList.length === 0 ? (
-                        <tr>
-                            <td
-                                colSpan={7}
-                                className="text-left p-4"
-                            >
-                                検索条件に一致する商品はありません
-                            </td>
-                        </tr>
-                    ) : (
-                        table.getRowModel().rows.map((row) => (
-                            <tr key={row.id}>
-                                {row.getVisibleCells().map((cell) => (
-                                    <td key={cell.id}>
-                                        {flexRender(
-                                            cell.column.columnDef.cell,
-                                            cell.getContext()
-                                        )}
-                                    </td>
-                                ))}
-                            </tr>
-                        ))
-                    )}
-                </tbody>
-            </table>
+            <InventoryCards table={table} />
         </div>
+
+        {/* PC用：今までの表 */}
+        <div className="mt-4 hidden md:block">
+            <div className="table-wrapper">
+                <table className="common-table">
+                    <InventoryTableHeader table={table} />
+                    <InventoryTableBody table={table} />
+                </table>
             </div>
+        </div>
+    </div>
     );
 }

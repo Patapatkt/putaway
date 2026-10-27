@@ -1,9 +1,5 @@
 // 検索のコンポーネント
 
-import { useForm } from "@conform-to/react";
-import { parseWithZod } from "@conform-to/zod/v4";
-import { InventorySearchSchema } from "../model/product";
-
 // 親ページから受け取るpropsの型
 type InventorySearchFormProps = {
 
@@ -32,6 +28,7 @@ export default async function InventorySearchForm({
                 </label>
                 <input
                     type="text"
+                    name="shelf"
                     placeholder="例:A1"
                     maxLength={6}
                     className="search-input"
