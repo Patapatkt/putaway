@@ -1,16 +1,16 @@
-import { flexRender, type Table } from "@tanstack/react-table";
+import { flexRender,HeaderGroup } from "@tanstack/react-table";
 import type { Product } from "../model/product";
 
 type InventoryTableHeaderProps = {
-    table: Table<Product>;
+    headerGroups: HeaderGroup<Product>[];
 };
 
 export default function InventoryTableHeader({
-    table,
+    headerGroups,
 }: InventoryTableHeaderProps) {
     return (
         <thead>
-            {table.getHeaderGroups().map((headerGroup) => (
+            {headerGroups.map((headerGroup) => (
                 <tr key={headerGroup.id}>
                     {headerGroup.headers.map((header) => (
                         <th key={header.id} colSpan={header.colSpan}>

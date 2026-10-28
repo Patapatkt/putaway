@@ -1,29 +1,31 @@
 // 検索テーブル表示・非表示チェックボックスのコンポーネント
-import type { Table } from "@tanstack/react-table";
 import type {Product}  from "../model/product";
+import type { Column } from "@tanstack/react-table";
 
 // Propsを定義
-// TData:表の１行のデータ型を受け取る仮の名前(データの型を受け取る場所)
 type InventoryCheckboxProps = {
-    table: Table<Product>; //Product型のデータを扱うテーブルの型
+    columns: Column<Product | undefined>[]; //Product型のデータを扱うテーブルの型
 };
-// 票のデータを受取りその型にあった引数を受取る
+//表のデータを受取りその型にあった引数を受取る
 export default function InventoryCheckbox({
-    table,
+    columns,
 }: InventoryCheckboxProps) {
+    // 最終入庫日の列を取得　columns.findでcolumnsからidに一致したものを取得
+    const lastReceivedAtColumn = columns.find(
+        (columns) => columns.id === "lastReceivedAt",
+    );
+    // 最終出庫日の列を取得　columns.findでcolumnsからidに一致したものを取得
+    const lastShippedAtColumn = columns.find(
+        (columns) => columns.id === "lastShippedAt",
+    );
+
     return (
         <div className="column-controls">
             <label>
                 <input
                     type="checkbox"
-                    checked={
-                        table.getColumn("lastReceivedAt")?.getIsVisible()
-                        ?? false
-                    }
-                    onChange={
-                        table.getColumn("lastReceivedAt")
-                            ?.getToggleVisibilityHandler()
-                    }
+                    checked={lastReceivedAtColumn?.getIsVisible() ?? false}//デフォルトは非表示
+                    onChange={lastReceivedAtColumn?.getToggleVisibilityHandler()}//チェックボックスを押すと表示
                 />
                 最終入庫日時を表示
             </label>
@@ -31,14 +33,8 @@ export default function InventoryCheckbox({
             <label>
                 <input
                     type="checkbox"
-                    checked={
-                        table.getColumn("lastShippedAt")?.getIsVisible()
-                        ?? false
-                    }
-                    onChange={
-                        table.getColumn("lastShippedAt")
-                            ?.getToggleVisibilityHandler()
-                    }
+                    checked={lastShippedAtColumn?.getIsVisible() ?? false}//デフォルトは非表示
+                    onChange={lastShippedAtColumn?.getToggleVisibilityHandler()}//チェックボックスを押すと表示
                 />
                 最終出庫日時を表示
             </label>

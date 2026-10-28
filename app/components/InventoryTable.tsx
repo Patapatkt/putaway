@@ -6,9 +6,9 @@ import {
     getSortedRowModel,
     useReactTable,
 } from "@tanstack/react-table";
-import type { ColumnDef, SortingState } from "@tanstack/react-table";
+import type { Column, ColumnDef, HeaderGroup, SortingState } from "@tanstack/react-table";
 import type { Product } from "@/app/model/product";
-import  InventoryCheckbox  from "./InventoryCheckbox";
+import InventoryCheckbox from "./InventoryCheckbox";
 import InventoryTableHeader from "./InventoryTableHeader";
 import InventoryTableBody from "./InventoryTableBody";
 import InventoryCards from "./InventoryCards";
@@ -118,36 +118,52 @@ export default function InventoryTable({
     });
 
     return (
-    <div>
-        <InventoryCheckbox table={table} />
+        <div>
+            <InventoryCheckbox
+                columns={[
+                    // 取得結果を「行データの型がProductまたはundefinedである列」として扱う。
+                    table.getColumn("lastReceivedAt") as Column<Product | undefined>,
+                    // 取得結果を「行データの型がProductまたはundefinedである列」として扱う。
+                    table.getColumn("lastShippedAt") as Column<Product | undefined>,
+                ]}
+            />
 
-        {/* スマホ用：並び替えボタンと縦型カード */}
-        <div className="mt-4 space-y-4 md:hidden">
-            <button
-                type="button"
-                className="rounded-md border border-slate-400 px-4 py-2 font-semibold"
-                onClick={
-                    table.getColumn("shelf")?.getToggleSortingHandler()
-                }
-            >
-                棚番順：
-                {table.getColumn("shelf")?.getIsSorted() === "desc"
-                    ? "降順 ↓"
-                    : "昇順 ↑"}
-            </button>
+            {/* スマホ用：並び替えボタンと縦型カード */}
+            <div className="mt-4 space-y-4 md:hidden">
+                <button
+                    type="button"
+                    className="rounded-md border border-slate-400 px-4 py-2 font-semibold"
+                    onClick={
+                        table.getColumn("shelf")?.getToggleSortingHandler()
+                    }
+                >
+                    棚番順：
+                    {table.getColumn("shelf")?.getIsSorted() === "desc"
+                        ? "降順 ↓"
+                        : "昇順 ↑"}
+                </button>
 
-            <InventoryCards table={table} />
-        </div>
+                <InventoryCards
+                    rows={table.getRowModel().rows}
+                />
+            </div>
 
-        {/* PC用：今までの表 */}
-        <div className="mt-4 hidden md:block">
-            <div className="table-wrapper">
-                <table className="common-table">
-                    <InventoryTableHeader table={table} />
-                    <InventoryTableBody table={table} />
-                </table>
+            {/* PC用：今までの表 */}
+            <div className="mt-4 hidden md:block">
+                <div className="table-wrapper">
+                    <table className="common-table">
+                        <InventoryTableHeader
+                            headerGroups={
+                                table.getHeaderGroups()
+                            }
+                        />
+                        <InventoryTableBody
+                            rows={table.getRowModel().rows}
+                            visibleColumnCount={7}
+                        />
+                    </table>
+                </div>
             </div>
         </div>
-    </div>
     );
 }

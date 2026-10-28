@@ -1,26 +1,28 @@
-import { flexRender, type Table } from "@tanstack/react-table";
+import { flexRender, Row } from "@tanstack/react-table";
 import type { Product } from "../model/product";
 
 type InventoryTableBodyProps = {
-    table: Table<Product>;
+    rows: Row<Product | undefined>[];
+    visibleColumnCount: number;
 };
 
 export default function InventoryTableBody({
-    table,
+    rows,
+    visibleColumnCount,
 }: InventoryTableBodyProps) {
     return (
         <tbody>
-            {table.getRowModel().rows.length === 0 ? (
+            {rows.length === 0 ? (
                 <tr>
                     <td
-                        colSpan={table.getVisibleLeafColumns().length}
+                        colSpan={visibleColumnCount}
                         className="text-left p-4"
                     >
                         検索条件に一致する商品はありません
                     </td>
                 </tr>
             ) : (
-                table.getRowModel().rows.map((row) => (
+                rows.map((row) => (
                     <tr key={row.id}>
                         {row.getVisibleCells().map((cell) => (
                             <td key={cell.id}>

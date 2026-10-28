@@ -1,14 +1,13 @@
-import { flexRender, type Table } from "@tanstack/react-table";
+import { flexRender, Row } from "@tanstack/react-table";
 import type { Product } from "@/app/model/product";
 
 type InventoryCardsProps = {
-    table: Table<Product>;
+    rows: Row<Product | undefined>[];
 };
 
 export default function InventoryCards({
-    table,
+    rows,
 }: InventoryCardsProps) {
-    const rows = table.getRowModel().rows;
 
     if (rows.length === 0) {
         return (
