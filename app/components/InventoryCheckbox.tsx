@@ -20,23 +20,23 @@ export default function InventoryCheckbox({
     );
 
     return (
-        <div className="column-controls">
-            <label>
+        <div className="grid grid-cols-2 gap-4">
+            <label className="flex items-center gap-2">
                 <input
                     type="checkbox"
                     checked={lastReceivedAtColumn?.getIsVisible() ?? false}//デフォルトは非表示
                     onChange={lastReceivedAtColumn?.getToggleVisibilityHandler()}//チェックボックスを押すと表示
                 />
-                最終入庫日時を表示
+                最終入庫日時🕗
             </label>
 
-            <label>
+            <label className="flex items-center gap-2">
                 <input
                     type="checkbox"
                     checked={lastShippedAtColumn?.getIsVisible() ?? false}//デフォルトは非表示
                     onChange={lastShippedAtColumn?.getToggleVisibilityHandler()}//チェックボックスを押すと表示
                 />
-                最終出庫日時を表示
+                最終出庫日時🕔
             </label>
         </div>
     );

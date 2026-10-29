@@ -75,7 +75,7 @@ export type RestockProduct = z.infer<typeof restockProductSchema>
 export const InventorySearchSchema = z.object({
     //商品名の入力ルールは文字列・前後の空白を取り除く
     productName: z
-        .string()//商品名
+        .string()
         .trim(),
     //棚番の入力ルールは文字列・前後の空白を取り除く・6文字以内の半角英数字
     shelf: z
@@ -88,16 +88,17 @@ export const InventorySearchSchema = z.object({
     //仕様の入力ルールは文字列・前後の空白を取り除く
     inquiry: z.string().trim(),
 })
-    //.refine()で項目をまたいだ検証
-    .refine(
-        (values) =>
-            values.shelf !== "" ||
-            values.productName !== "" ||
-            values.inquiry !== "",
-        {
-            message: "検索条件を入力してください",
-        }
-    );
+// 仕様により一旦コメントアウト
+    // // //.refine()で項目をまたいだ検証
+    // // .refine(
+    // //     (values) =>
+    // //         values.shelf !== "" ||
+    // //         values.productName !== "" ||
+    // //         values.inquiry !== "",
+    // //     {
+    // //         message: "検索条件を入力してください",
+    // //     }
+    // );
 // 検証ルールから検索条件の型を作る
 export type SearchSchema = z.infer<typeof InventorySearchSchema>
 

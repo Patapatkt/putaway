@@ -334,14 +334,6 @@ textarea.form-input {
 }
 
 /* 1行：項目名・入力欄・説明 */
-.searcharea .search-field {
-  display: grid;
-  grid-template-columns: 80px minmax(0, 1fr) minmax(0, 1fr);
-  gap: 8px 16px;
-  align-items: center;
-  padding: 14px 0;
-  border-bottom: 1px solid #e2e8f0;
-}
 
 .searcharea .search-field label {
   font-weight: 600;
@@ -399,10 +391,8 @@ textarea.form-input {
 
 /* スマートフォンでは縦並び */
 @media (max-width: 640px) {
-  .searcharea .search-field {
-    grid-template-columns: 1fr;
-  }
-
+  .searcharea .search-field
+   
   .searcharea .search-field .form-error {
     grid-column: 1;
   }

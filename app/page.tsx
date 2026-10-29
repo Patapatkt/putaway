@@ -1,5 +1,4 @@
 // 在庫一覧を表示するページ
-
 import Link from "next/link";
 import InventorySearchContent from "./components/InventorySearchContent";
 import InventorySearchForm from "./components/InventorySearchForm";

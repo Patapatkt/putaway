@@ -12,6 +12,8 @@ import InventoryCheckbox from "./InventoryCheckbox";
 import InventoryTableHeader from "./InventoryTableHeader";
 import InventoryTableBody from "./InventoryTableBody";
 import InventoryCards from "./InventoryCards";
+import NewDate from "./NewDate";
+import InventorySort from "./InventorySort";
 // 表の表示に必要な商品情報の型
 type InventoryTableProps = {
     productList: Product[]//親から商品データの配列を受け取る
@@ -27,10 +29,23 @@ const columns: ColumnDef<Product>[] = [
     {
         accessorKey: "productName",
         header: "商品名",
+         // 日本語の比較ルールを使う。降順への反転はTanStack Tableが担当
+        sortingFn:(rowA,rowB,columnId)=>
+            rowA.getValue<string>(columnId).localeCompare(
+                rowB.getValue<string>(columnId),
+                "ja"//英数字を含む場合は.localeCompare以降を下記の様に変える
+                //.localeCompare(比較する文字列, "en", {numeric: true,})    
+            ),    
     },
     {
         accessorKey: "inquiry",
         header: "仕様",
+        // 日本語の比較ルールを使う。降順への反転はTanStack Tableが担当
+        sortingFn:(rowA,rowB,columnId)=>
+            rowA.getValue<string>(columnId).localeCompare(
+                rowB.getValue<string>(columnId),
+                "ja"
+            ),    
     },
     {
         accessorKey: "quantity",
@@ -45,17 +60,10 @@ const columns: ColumnDef<Product>[] = [
             if (!value) {
                 return "—";
             }
-
-            return new Date(value).toLocaleString("ja-JP", {
-                timeZone: "Asia/Tokyo",
-                year: "numeric",
-                month: "2-digit",
-                day: "2-digit",
-                hour: "2-digit",
-                minute: "2-digit",
-                second: "2-digit",
-                hour12: false,
-            });
+            return (
+                <NewDate
+                    value={value}//👆で取得した日時を子コンポーネントに渡す
+                />)
         },
     },
     {
@@ -68,16 +76,10 @@ const columns: ColumnDef<Product>[] = [
                 return "—";
             }
 
-            return new Date(value).toLocaleString("ja-JP", {
-                timeZone: "Asia/Tokyo",
-                year: "numeric",
-                month: "2-digit",
-                day: "2-digit",
-                hour: "2-digit",
-                minute: "2-digit",
-                second: "2-digit",
-                hour12: false,
-            });
+            return (
+                <NewDate
+                    value={value}//取得した日時を子コンポーネントに渡す
+                />)
         },
     },
 ];
@@ -127,26 +129,17 @@ export default function InventoryTable({
                     table.getColumn("lastShippedAt") as Column<Product | undefined>,
                 ]}
             />
+            <InventorySort
+                columns={[
+                    table.getColumn("shelf") as Column<Product>,
+                    table.getColumn("productName") as Column<Product>,
+                    table.getColumn("inquiry") as Column<Product>,
+                ]}
+            />
 
-            {/* スマホ用：並び替えボタンと縦型カード */}
-            <div className="mt-4 space-y-4 md:hidden">
-                <button
-                    type="button"
-                    className="rounded-md border border-slate-400 px-4 py-2 font-semibold"
-                    onClick={
-                        table.getColumn("shelf")?.getToggleSortingHandler()
-                    }
-                >
-                    棚番順：
-                    {table.getColumn("shelf")?.getIsSorted() === "desc"
-                        ? "降順 ↓"
-                        : "昇順 ↑"}
-                </button>
-
-                <InventoryCards
-                    rows={table.getRowModel().rows}
-                />
-            </div>
+            <InventoryCards
+                rows={table.getRowModel().rows}
+            />
 
             {/* PC用：今までの表 */}
             <div className="mt-4 hidden md:block">
