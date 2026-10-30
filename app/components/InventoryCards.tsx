@@ -22,7 +22,7 @@ export default function InventoryCards({
             {rows.map((row) => (
                 <article
                     key={row.id}
-                    className="rounded-lg border border-slate-300 bg-white p-4 text-slate-900 shadow-sm"
+                    className="block md:hidden rounded-lg border border-slate-300 bg-white p-4 text-slate-900 shadow-sm"
                 >
                     <dl className="space-y-3">
                         {row.getVisibleCells().map((cell) => (

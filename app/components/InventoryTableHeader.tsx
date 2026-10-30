@@ -14,7 +14,7 @@ export default function InventoryTableHeader({
                 <tr key={headerGroup.id}>
                     {headerGroup.headers.map((header) => (
                         <th key={header.id} colSpan={header.colSpan}>
-                            {header.isPlaceholder ? null : header.column.id === "shelf" ? (
+                            {header.isPlaceholder ? null :["shelf","productName","inquiry"].includes(header.column.id)?(
                                 <button
                                     type="button"
                                     onClick={header.column.getToggleSortingHandler()}
@@ -24,10 +24,10 @@ export default function InventoryTableHeader({
                                         header.getContext()
                                     )}
                                     {header.column.getIsSorted() === "asc"
-                                        ? " ↑"
+                                        ? " 🔼"
                                         : header.column.getIsSorted() === "desc"
-                                            ? " ↓"
-                                            : ""}
+                                            ? " 🔽"
+                                            : "↕️"}
                                 </button>
                             ) : (
                                 flexRender(
