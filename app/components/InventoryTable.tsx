@@ -1,12 +1,18 @@
 "use client";
+
 // 検索結果の表示コンポーネント
 import { useState } from "react";
 import {
-    getCoreRowModel,
-    getSortedRowModel,
-    useReactTable,
+    createSortedRowModel,
+    stockFeatures,
+    tableFeatures,
+    useTable,
 } from "@tanstack/react-table";
-import type { Column, ColumnDef, HeaderGroup, SortingState } from "@tanstack/react-table";
+import type {
+    ColumnDef,
+    SortingState,
+} from "@tanstack/react-table";
+
 import type { Product } from "@/app/model/product";
 import InventoryCheckbox from "./InventoryCheckbox";
 import InventoryTableHeader from "./InventoryTableHeader";
@@ -14,76 +20,81 @@ import InventoryTableBody from "./InventoryTableBody";
 import InventoryCards from "./InventoryCards";
 import NewDate from "./NewDate";
 import InventorySort from "./InventorySort";
-// 表の表示に必要な商品情報の型
+
 type InventoryTableProps = {
-    productList: Product[]//親から商品データの配列を受け取る
+    productList: Product[];
 };
 
-// 表の列を定義する
-const columns: ColumnDef<Product>[] = [
+// 標準機能に、実際に行を並び替える処理を追加する
+const features = tableFeatures({
+    ...stockFeatures,
+    sortedRowModel: createSortedRowModel(),
+});
+
+// 「使う機能の型」「行データの型」の順に指定する
+const columns: ColumnDef<typeof features, Product>[] = [
     {
         accessorKey: "shelf",
         header: "棚番",
-        sortingFn: "text",
+        sortFn: (rowA, rowB) =>
+            rowA.original.shelf.localeCompare(
+                rowB.original.shelf,
+                "ja",
+            ),
     },
     {
         accessorKey: "productName",
         header: "商品名",
-         // 日本語の比較ルールを使う。降順への反転はTanStack Tableが担当
-        sortingFn:(rowA,rowB,columnId)=>
-            rowA.getValue<string>(columnId).localeCompare(
-                rowB.getValue<string>(columnId),
-                "ja"//英数字を含む場合は.localeCompare以降を下記の様に変える
-                //.localeCompare(比較する文字列, "en", {numeric: true,})    
-            ),    
+        // 昇順の比較を定義し、降順への反転はテーブルに任せる
+        sortFn: (rowA, rowB) =>
+            rowA.original.productName.localeCompare(
+                rowB.original.productName,
+                "ja",
+            ),
     },
     {
         accessorKey: "inquiry",
         header: "仕様",
-        // 日本語の比較ルールを使う。降順への反転はTanStack Tableが担当
-        sortingFn:(rowA,rowB,columnId)=>
-            rowA.getValue<string>(columnId).localeCompare(
-                rowB.getValue<string>(columnId),
-                "ja"
-            ),    
+        sortFn: (rowA, rowB) =>
+            rowA.original.inquiry.localeCompare(
+                rowB.original.inquiry,
+                "ja",
+            ),
     },
     {
         accessorKey: "quantity",
         header: "現在庫",
+        sortFn: (rowA, rowB) =>
+            rowA.original.quantity - rowB.original.quantity,
     },
     {
         accessorKey: "lastReceivedAt",
         header: "最終入庫時間",
-        cell: ({ getValue }) => {
-            const value = getValue<string | null>();
+        cell: (info) => {
+            const value = info.getValue<string | null>();
 
             if (!value) {
                 return "—";
             }
-            return (
-                <NewDate
-                    value={value}//👆で取得した日時を子コンポーネントに渡す
-                />)
+
+            return <NewDate value={value} />;
         },
     },
     {
         accessorKey: "lastShippedAt",
         header: "最終出庫日時",
-        cell: ({ getValue }) => {
-            const value = getValue<string | null>();
+        cell: (info) => {
+            const value = info.getValue<string | null>();
 
             if (!value) {
                 return "—";
             }
 
-            return (
-                <NewDate
-                    value={value}//取得した日時を子コンポーネントに渡す
-                />)
+            return <NewDate value={value} />;
         },
     },
 ];
-// 商品一覧の検索結果を表示する
+
 export default function InventoryTable({
     productList,
 }: InventoryTableProps) {
@@ -91,15 +102,15 @@ export default function InventoryTable({
     const [sorting, setSorting] = useState<SortingState>([
         { id: "shelf", desc: false },
     ]);
-    // 商品データと列の定義を使って表を準備する
-    const table = useReactTable({
+
+    const table = useTable({
+        features,
+
         data: productList,
         columns,
-        getCoreRowModel: getCoreRowModel(),
-        getSortedRowModel: getSortedRowModel(),
         getRowId: (product) => String(product.id),
 
-        // 初期表示では日時２列を非表示にする
+        // 初期表示では日時2列を非表示にする
         initialState: {
             columnVisibility: {
                 lastReceivedAt: false,
@@ -107,11 +118,13 @@ export default function InventoryTable({
             },
         },
 
+        // ソート状態をReactで管理する
         state: {
             sorting,
         },
         onSortingChange: setSorting,
-        // 列の表示状態が変わっても、並び順を初期化しない
+
+        // 列の表示状態が変わっても並び順を初期化しない
         autoResetAll: false,
 
         // 昇順と降順の2通りで切り替える
@@ -119,40 +132,42 @@ export default function InventoryTable({
         enableMultiSort: false,
     });
 
+    // 日時の表示切替に使う列を取得する
+    const dateColumns = table.getAllLeafColumns().filter(
+        (column) =>
+            column.id === "lastReceivedAt" ||
+            column.id === "lastShippedAt",
+    );
+
+    // 並び替えボタンに使う列を取得する
+    const sortColumns = table.getAllLeafColumns().filter(
+        (column) =>
+            column.id === "shelf" ||
+            column.id === "productName" ||
+            column.id === "inquiry",
+    );
+
     return (
         <div>
-            <InventoryCheckbox
-                columns={[
-                    // 取得結果を「行データの型がProductまたはundefinedである列」として扱う。
-                    table.getColumn("lastReceivedAt") as Column<Product | undefined>,
-                    // 取得結果を「行データの型がProductまたはundefinedである列」として扱う。
-                    table.getColumn("lastShippedAt") as Column<Product | undefined>,
-                ]}
-            />
-            <InventorySort
-                columns={[
-                    table.getColumn("shelf") as Column<Product>,
-                    table.getColumn("productName") as Column<Product>,
-                    table.getColumn("inquiry") as Column<Product>,
-                ]}
-            />
+            <InventoryCheckbox columns={dateColumns} />
 
-            <InventoryCards
-                rows={table.getRowModel().rows}
-            />
+            <InventorySort columns={sortColumns} />
 
-            {/* PC用：今までの表 */}
+            <InventoryCards rows={table.getRowModel().rows} />
+
+            {/* PC用の表 */}
             <div className="mt-4 hidden md:block">
                 <div className="table-wrapper">
                     <table className="common-table">
                         <InventoryTableHeader
-                            headerGroups={
-                                table.getHeaderGroups()
-                            }
+                            headerGroups={table.getHeaderGroups()}
                         />
+
                         <InventoryTableBody
                             rows={table.getRowModel().rows}
-                            visibleColumnCount={7}
+                            visibleColumnCount={
+                                table.getVisibleLeafColumns().length
+                            }
                         />
                     </table>
                 </div>
