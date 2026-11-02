@@ -3,13 +3,14 @@
 // 検索結果の表示コンポーネント
 import { useState } from "react";
 import {
+    createSortedRowModel,
     stockFeatures,
+    tableFeatures,
     useTable,
 } from "@tanstack/react-table";
 import type {
     ColumnDef,
     SortingState,
-    StockFeatures,
 } from "@tanstack/react-table";
 
 import type { Product } from "@/app/model/product";
@@ -24,34 +25,47 @@ type InventoryTableProps = {
     productList: Product[];
 };
 
-// v9では「使う機能の型」「行データの型」の順に指定する
-const columns: ColumnDef<StockFeatures, Product>[] = [
+// 標準機能に、実際に行を並び替える処理を追加する
+const features = tableFeatures({
+    ...stockFeatures,
+    sortedRowModel: createSortedRowModel(),
+});
+
+// 「使う機能の型」「行データの型」の順に指定する
+const columns: ColumnDef<typeof features, Product>[] = [
     {
         accessorKey: "shelf",
         header: "棚番",
-        sortFn: "text",
+        sortFn: (rowA, rowB) =>
+            rowA.original.shelf.localeCompare(
+                rowB.original.shelf,
+                "ja",
+            ),
     },
     {
         accessorKey: "productName",
         header: "商品名",
-        sortFn: (rowA, rowB, columnId) =>
-            rowA.getValue<string>(columnId).localeCompare(
-                rowB.getValue<string>(columnId),
+        // 昇順の比較を定義し、降順への反転はテーブルに任せる
+        sortFn: (rowA, rowB) =>
+            rowA.original.productName.localeCompare(
+                rowB.original.productName,
                 "ja",
             ),
     },
     {
         accessorKey: "inquiry",
         header: "仕様",
-        sortFn: (rowA, rowB, columnId) =>
-            rowA.getValue<string>(columnId).localeCompare(
-                rowB.getValue<string>(columnId),
+        sortFn: (rowA, rowB) =>
+            rowA.original.inquiry.localeCompare(
+                rowB.original.inquiry,
                 "ja",
             ),
     },
     {
         accessorKey: "quantity",
         header: "現在庫",
+        sortFn: (rowA, rowB) =>
+            rowA.original.quantity - rowB.original.quantity,
     },
     {
         accessorKey: "lastReceivedAt",
@@ -90,8 +104,7 @@ export default function InventoryTable({
     ]);
 
     const table = useTable({
-        // ソート・列の表示切替などの標準機能を使う
-        features: stockFeatures,
+        features,
 
         data: productList,
         columns,
@@ -105,23 +118,28 @@ export default function InventoryTable({
             },
         },
 
+        // ソート状態をReactで管理する
         state: {
             sorting,
         },
         onSortingChange: setSorting,
 
+        // 列の表示状態が変わっても並び順を初期化しない
         autoResetAll: false,
+
+        // 昇順と降順の2通りで切り替える
         enableSortingRemoval: false,
         enableMultiSort: false,
     });
 
-    // 型アサーションを使わず、取得した列を渡す
+    // 日時の表示切替に使う列を取得する
     const dateColumns = table.getAllLeafColumns().filter(
         (column) =>
             column.id === "lastReceivedAt" ||
             column.id === "lastShippedAt",
     );
 
+    // 並び替えボタンに使う列を取得する
     const sortColumns = table.getAllLeafColumns().filter(
         (column) =>
             column.id === "shelf" ||
@@ -144,6 +162,7 @@ export default function InventoryTable({
                         <InventoryTableHeader
                             headerGroups={table.getHeaderGroups()}
                         />
+
                         <InventoryTableBody
                             rows={table.getRowModel().rows}
                             visibleColumnCount={
