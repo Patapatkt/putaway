@@ -1,8 +1,10 @@
-import { flexRender,HeaderGroup } from "@tanstack/react-table";
-import type { Product } from "../model/product";
+import { flexRender, type HeaderGroup } from "@tanstack/react-table";
+import type { Product } from "@/app/model/product";
+import type { InventoryTableFeatures } from "./InventoryTable";
+
 
 type InventoryTableHeaderProps = {
-    headerGroups: HeaderGroup<Product>[];
+    headerGroups: HeaderGroup<InventoryTableFeatures,Product>[];
 };
 
 export default function InventoryTableHeader({

@@ -12,7 +12,7 @@ type InventorySearchFormProps = {
 
 };
 // inventorySearchFormコンポーネントを定義
-export default function InventorySearchForm({//⇐この行のasyncを削除
+export default function InventorySearchForm({
     shelf,
     productName,
     inquiry,

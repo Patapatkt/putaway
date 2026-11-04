@@ -1,8 +1,9 @@
 import { flexRender, Row } from "@tanstack/react-table";
 import type { Product } from "@/app/model/product";
+import type { InventoryTableFeatures } from "./InventoryTable";
 
 type InventoryCardsProps = {
-    rows: Row<Product | undefined>[];
+    rows: Row<InventoryTableFeatures, Product>[];
 };
 
 export default function InventoryCards({
@@ -18,7 +19,7 @@ export default function InventoryCards({
     }
 
     return (
-        <div className="space-y-4">
+        <div className="space-y-4 md:hidden" >
             {rows.map((row) => (
                 <article
                     key={row.id}

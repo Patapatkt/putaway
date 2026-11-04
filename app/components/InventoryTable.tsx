@@ -3,6 +3,7 @@
 // 検索結果の表示コンポーネント
 import { useState } from "react";
 import {
+    createPaginatedRowModel,//ページネーション追加
     createSortedRowModel,
     stockFeatures,
     tableFeatures,
@@ -25,10 +26,14 @@ type InventoryTableProps = {
     productList: Product[];
 };
 
+export type InventoryTableFeatures = typeof features
+
 // 標準機能に、実際に行を並び替える処理を追加する
 const features = tableFeatures({
     ...stockFeatures,
     sortedRowModel: createSortedRowModel(),
+    // ページネーション追加
+    paginatedRowModel: createPaginatedRowModel(),
 });
 
 // 「使う機能の型」「行データの型」の順に指定する
@@ -116,6 +121,11 @@ export default function InventoryTable({
                 lastReceivedAt: false,
                 lastShippedAt: false,
             },
+            // ページネーション追加
+            pagination: {
+                pageIndex: 0,//0が1ページ目
+                pageSize: 10,//1ページに表示する件数
+            },
         },
 
         // ソート状態をReactで管理する
@@ -124,8 +134,9 @@ export default function InventoryTable({
         },
         onSortingChange: setSorting,
 
-        // 列の表示状態が変わっても並び順を初期化しない
-        autoResetAll: false,
+        // ページネーション追加
+
+        autoResetAll: true, // データが変わったらソート状態をリセットする
 
         // 昇順と降順の2通りで切り替える
         enableSortingRemoval: false,
@@ -152,7 +163,38 @@ export default function InventoryTable({
             <InventoryCheckbox columns={dateColumns} />
 
             <InventorySort columns={sortColumns} />
+            {/* ページネーション追加 */}
+            <nav
+                aria-label="在庫一覧のページ切り替え"
+                className="my-4 flex flex-wrap items-center gap-3"
+            >
+                <button
+                    type="button"
+                    onClick={() => table.previousPage()}
+                    disabled={!table.getCanPreviousPage()}
+                    className="rounded border px-3 py-2 disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                    前へ
+                </button>
 
+                <span aria-live="polite">
+                    {table.getPageCount() === 0
+                        ? 0
+                        : table.state.pagination.pageIndex + 1}
+                    {" / "}
+                    {table.getPageCount()} ページ
+                    （全{productList.length}件）
+                </span>
+
+                <button
+                    type="button"
+                    onClick={() => table.nextPage()}
+                    disabled={!table.getCanNextPage()}
+                    className="rounded border px-3 py-2 disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                    次へ
+                </button>
+            </nav>
             <InventoryCards rows={table.getRowModel().rows} />
 
             {/* PC用の表 */}
