@@ -5,12 +5,12 @@ import type { Column } from "@tanstack/react-table";
 
 // Product：在庫データ１行分の型
 import type { Product } from "../model/product";
+import type { InventoryTableFeatures } from "./InventoryTable";
 
 // 親から受け取るpropsの型を定義する
 type InventorySortProps = {
-    // Column<Product>：Productを扱うテーブルの１列を[]配列で取得
-    // 列が取得できなかった場合はundefined(未定義)で[]配列で受け取れる
-    columns: (Column<Product> | undefined)[];
+    // 指定した機能と商品データの型に対応する「列」の配列を受け取る
+    columns: (Column<InventoryTableFeatures,Product>)[];
 };
 
 // 親から渡されたpropsの中から、columnsを取り出す
@@ -20,20 +20,20 @@ export default function InventorySort({
 }: InventorySortProps) {
     // find：配列の中から、条件に合う最初の要素を探す
     // column：配列から１つずつ確認している列
-    // column?.id：列が存在すれば、その識別名を読む
+    // column.id：列の識別名を読む
     // 見つからなければfindの結果はundefinedになる
     const shelfColumn = columns.find(
-        (column) => column?.id === "shelf"
+        (column) => column.id === "shelf"
     );
 
     // 商品名の列を探す
     const productNameColumn = columns.find(
-        (column) => column?.id === "productName"
+        (column) => column.id === "productName"
     );
 
     // 仕様の列を探す
     const inquiryColumn = columns.find(
-        (column) => column?.id === "inquiry"
+        (column) => column.id === "inquiry"
     );
 
     // このコンポーネントが表示するJSXを返す

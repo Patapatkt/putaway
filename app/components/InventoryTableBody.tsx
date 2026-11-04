@@ -1,8 +1,9 @@
 import { flexRender, Row } from "@tanstack/react-table";
 import type { Product } from "../model/product";
+import { InventoryTableFeatures } from "./InventoryTable";
 
 type InventoryTableBodyProps = {
-    rows: Row<Product | undefined>[];
+    rows: Row<InventoryTableFeatures,Product>[];
     visibleColumnCount: number;
 };
 

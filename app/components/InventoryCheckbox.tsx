@@ -1,10 +1,11 @@
 // 検索テーブル表示・非表示チェックボックスのコンポーネント
 import type {Product}  from "../model/product";
 import type { Column } from "@tanstack/react-table";
+import type { InventoryTableFeatures } from "./InventoryTable";
 
 // Propsを定義
 type InventoryCheckboxProps = {
-    columns: Column<Product | undefined>[]; //Product型のデータを扱うテーブルの型
+    columns: Column<InventoryTableFeatures,Product>[]; //Product型のデータを扱うテーブルの型
 };
 //表のデータを受取りその型にあった引数を受取る
 export default function InventoryCheckbox({
